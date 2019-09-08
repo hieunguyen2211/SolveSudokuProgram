@@ -94,7 +94,6 @@ void loadImages(Images &images)
   buttonItemBackActive->loadFromFile("Image/Buttons/backActive.png");
   images.buttonItemBackActive.setTexture(*buttonItemBackActive);
 
-
   Texture *buttonMute = new Texture;
   buttonMute->loadFromFile("Image/Buttons/mute.png");
   images.buttonMute.setTexture(*buttonMute);
@@ -500,7 +499,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
   error.setColor(Color::Red);
   error.setString("");
 
-  bool checkFocus[3] = {false,false,false};
+  bool checkFocus[3] = {false, false, false};
   while (window.isOpen())
   {
     Event e;
@@ -581,65 +580,63 @@ void displayGameScreen(RenderWindow &window, Data &data)
         }
         break;
 
-        case Event::MouseMoved:
-            int x = e.mouseMove.x;
-            int y = e.mouseMove.y;
-            if (x >= 730 && x <= 800 && y >= 210 && y <= 280)
-            {
-                checkFocus[0] = true;
-            }
-            else
-            {
-                checkFocus[0] = false;
-            }
-            if (x >= 730 && x <= 800 && y >= 330 && y <= 400)
-            {
-                checkFocus[1] = true;
-            }
-            else
-            {
-                checkFocus[1] = false;
-            }
-            if (x >= 730 && x <= 800 && y >= 450 && y <= 520)
-            {
-                checkFocus[2] = true;
-            }
-            else
-            {
-                 checkFocus[2] = false;
-            }
+      case Event::MouseMoved:
+        int x = e.mouseMove.x;
+        int y = e.mouseMove.y;
+        if (x >= 730 && x <= 800 && y >= 210 && y <= 280)
+        {
+          checkFocus[0] = true;
+        }
+        else
+        {
+          checkFocus[0] = false;
+        }
+        if (x >= 730 && x <= 800 && y >= 330 && y <= 400)
+        {
+          checkFocus[1] = true;
+        }
+        else
+        {
+          checkFocus[1] = false;
+        }
+        if (x >= 730 && x <= 800 && y >= 450 && y <= 520)
+        {
+          checkFocus[2] = true;
+        }
+        else
+        {
+          checkFocus[2] = false;
+        }
 
-            break;
+        break;
       }
     }
     window.clear();
     window.draw(data.images.backgroundInGame);
     if (checkFocus[0])
-            {
-                window.draw(data.images.buttonItemGenerateActive);
-            }
-            else
-            {
-                window.draw(data.images.buttonItemGenerate);
-            }
-            if (checkFocus[1])
-            {
-                window.draw(data.images.buttonItemSolveActive);
-            }
-            else
-            {
-                window.draw(data.images.buttonItemSolve);
-            }
-            if (checkFocus[2])
-            {
-                window.draw(data.images.buttonItemBackActive);
-            }
-            else
-            {
-                 window.draw(data.images.buttonItemBack);
-            }
-
-
+    {
+      window.draw(data.images.buttonItemGenerateActive);
+    }
+    else
+    {
+      window.draw(data.images.buttonItemGenerate);
+    }
+    if (checkFocus[1])
+    {
+      window.draw(data.images.buttonItemSolveActive);
+    }
+    else
+    {
+      window.draw(data.images.buttonItemSolve);
+    }
+    if (checkFocus[2])
+    {
+      window.draw(data.images.buttonItemBackActive);
+    }
+    else
+    {
+      window.draw(data.images.buttonItemBack);
+    }
 
     window.draw(rectangleFull);
 
@@ -685,30 +682,28 @@ void displayOptionScreen(RenderWindow &window, Data &data)
     rectangleVolumeMusic[i].setOutlineColor(Color::Black);
     rectangleVolumeMusic[i].setOutlineThickness(1);
     rectangleVolumeMusic[i].setSize(Vector2f(5, 20 + i * 5));
-    if (i<data.volumeMusic/20)
+    if (i < data.volumeMusic / 20)
     {
-        rectangleVolumeMusic[i].setFillColor(Color::Red);
+      rectangleVolumeMusic[i].setFillColor(Color::Red);
     }
     else
     {
-        rectangleVolumeMusic[i].setFillColor(Color::Transparent);
+      rectangleVolumeMusic[i].setFillColor(Color::Transparent);
     }
-
 
     rectangleVolumeButton[i].setPosition(496 + i * 6, 500 - i * 5);
     rectangleVolumeButton[i].setOutlineColor(Color::Black);
     rectangleVolumeButton[i].setOutlineThickness(1);
     rectangleVolumeButton[i].setSize(Vector2f(5, 20 + i * 5));
-    if (i<data.volumeButton/20)
+    if (i < data.volumeButton / 20)
     {
-        rectangleVolumeButton[i].setFillColor(Color::Red);
+      rectangleVolumeButton[i].setFillColor(Color::Red);
     }
     else
     {
-        rectangleVolumeButton[i].setFillColor(Color::Transparent);
+      rectangleVolumeButton[i].setFillColor(Color::Transparent);
     }
   }
-
 
   while (window.isOpen())
   {
@@ -741,9 +736,9 @@ void displayOptionScreen(RenderWindow &window, Data &data)
             {
               data.volumeMusic = 0;
             }
-            for (int i = data.volumeMusic / 20; i<5; i++)
+            for (int i = data.volumeMusic / 20; i < 5; i++)
             {
-                rectangleVolumeMusic[i].setFillColor(Color::Transparent);
+              rectangleVolumeMusic[i].setFillColor(Color::Transparent);
             }
             data.sounds.main.setVolume(data.volumeMusic);
             lastVolumeMusic = data.volumeMusic;
@@ -757,7 +752,7 @@ void displayOptionScreen(RenderWindow &window, Data &data)
             {
               data.volumeMusic = 100;
             }
-            rectangleVolumeMusic[data.volumeMusic/20-1].setFillColor(Color::Red);
+            rectangleVolumeMusic[data.volumeMusic / 20 - 1].setFillColor(Color::Red);
             data.sounds.main.setVolume(data.volumeMusic);
             lastVolumeMusic = data.volumeMusic;
           }
@@ -770,9 +765,9 @@ void displayOptionScreen(RenderWindow &window, Data &data)
             {
               data.volumeButton = 0;
             }
-            for (int i = data.volumeButton / 20; i<5; i++)
+            for (int i = data.volumeButton / 20; i < 5; i++)
             {
-                rectangleVolumeButton[i].setFillColor(Color::Transparent);
+              rectangleVolumeButton[i].setFillColor(Color::Transparent);
             }
             data.sounds.button.setVolume(data.volumeButton);
             lastVolumeButton = data.volumeButton;
@@ -786,7 +781,7 @@ void displayOptionScreen(RenderWindow &window, Data &data)
             {
               data.volumeButton = 100;
             }
-            rectangleVolumeButton[data.volumeButton/20-1].setFillColor(Color::Red);
+            rectangleVolumeButton[data.volumeButton / 20 - 1].setFillColor(Color::Red);
             data.sounds.button.setVolume(data.volumeButton);
             lastVolumeButton = data.volumeButton;
           }
@@ -797,17 +792,17 @@ void displayOptionScreen(RenderWindow &window, Data &data)
             if (data.volumeMusic > 0)
             {
               data.volumeMusic = 0;
-              for (int i = 0 ; i < 5 ;i ++)
+              for (int i = 0; i < 5; i++)
               {
-                  rectangleVolumeMusic[i].setFillColor(Color::Transparent);
+                rectangleVolumeMusic[i].setFillColor(Color::Transparent);
               }
             }
             else
             {
               data.volumeMusic = lastVolumeMusic;
-              for (int i = 0 ; i < lastVolumeMusic/20; i ++)
+              for (int i = 0; i < lastVolumeMusic / 20; i++)
               {
-                  rectangleVolumeMusic[i].setFillColor(Color::Red);
+                rectangleVolumeMusic[i].setFillColor(Color::Red);
               }
             }
             data.sounds.main.setVolume(data.volumeMusic);
@@ -819,17 +814,17 @@ void displayOptionScreen(RenderWindow &window, Data &data)
             if (data.volumeButton > 0)
             {
               data.volumeButton = 0;
-              for (int i = 0 ; i < 5 ;i ++)
+              for (int i = 0; i < 5; i++)
               {
-                  rectangleVolumeButton[i].setFillColor(Color::Transparent);
+                rectangleVolumeButton[i].setFillColor(Color::Transparent);
               }
             }
             else
             {
               data.volumeButton = lastVolumeButton;
-              for (int i = 0 ; i < lastVolumeButton/20; i ++)
+              for (int i = 0; i < lastVolumeButton / 20; i++)
               {
-                  rectangleVolumeButton[i].setFillColor(Color::Red);
+                rectangleVolumeButton[i].setFillColor(Color::Red);
               }
             }
             data.sounds.button.setVolume(data.volumeButton);
@@ -894,7 +889,6 @@ void displayOptionScreen(RenderWindow &window, Data &data)
     window.display();
   }
 }
-
 
 int main()
 {
