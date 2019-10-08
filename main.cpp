@@ -35,6 +35,14 @@ struct Images
   Sprite loading;
 };
 
+struct inputPoint
+{
+  int value;
+  int x;
+  int y;
+  bool active;
+};
+
 struct Data
 {
   Images images;
@@ -114,7 +122,7 @@ void loadFont(Font &font)
   font.loadFromFile("Font/main.ttf");
 }
 
-void ReadGridFromInputFile(int **grid, int n)
+void readGridFromInputFile(int **grid, int n)
 {
 
   ifstream ifs;
@@ -129,7 +137,7 @@ void ReadGridFromInputFile(int **grid, int n)
   ifs.close();
 }
 
-bool FindUnassignedLocation(int **grid, int &row, int &col);
+bool findUnassignedLocation(int **grid, int &row, int &col);
 
 bool isSafe(int **grid, int row, int col, int num);
 
@@ -139,7 +147,7 @@ void displayGuideScreen(RenderWindow &window, Data &data);
 
 void displayOptionScreen(RenderWindow &window, Data &data);
 
-bool FindUnassignedLocation(int **grid,
+bool findUnassignedLocation(int **grid,
                             int &row, int &col)
 {
   for (row = 0; row < N; row++)
@@ -149,7 +157,7 @@ bool FindUnassignedLocation(int **grid,
   return false;
 }
 
-bool UsedInRow(int **grid, int row, int num)
+bool usedInRow(int **grid, int row, int num)
 {
   for (int col = 0; col < N; col++)
     if (grid[row][col] == num)
@@ -157,7 +165,7 @@ bool UsedInRow(int **grid, int row, int num)
   return false;
 }
 
-bool UsedInCol(int **grid, int col, int num)
+bool usedInCol(int **grid, int col, int num)
 {
   for (int row = 0; row < N; row++)
     if (grid[row][col] == num)
@@ -165,7 +173,7 @@ bool UsedInCol(int **grid, int col, int num)
   return false;
 }
 
-bool UsedInBox(int **grid, int boxStartRow,
+bool usedInBox(int **grid, int boxStartRow,
                int boxStartCol, int num)
 {
   for (int row = 0; row < 3; row++)
@@ -178,14 +186,14 @@ bool UsedInBox(int **grid, int boxStartRow,
 bool isSafe(int **grid, int row,
             int col, int num)
 {
-  return !UsedInRow(grid, row, num) &&
-         !UsedInCol(grid, col, num) &&
-         !UsedInBox(grid, row - row % 3,
+  return !usedInRow(grid, row, num) &&
+         !usedInCol(grid, col, num) &&
+         !usedInBox(grid, row - row % 3,
                     col - col % 3, num) &&
          grid[row][col] == UNASSIGNED;
 }
 
-void GenerateNewGrid(int **grid)
+void generateNewGrid(int **grid)
 {
   for (int i = 0; i < N; i++)
   {
@@ -194,55 +202,46 @@ void GenerateNewGrid(int **grid)
       grid[i][j] = 0;
     }
   }
-  for (int i = 0; i < 20; i++)
-  {
-    bool check = false;
+  // for (int i = 0; i < 20; i++)
+  // {
+  //   bool check = false;
 
-    while (check == false)
-    {
-      int row = rand() % 9;
-      int col = rand() % 9;
-      int value = rand() % 9;
-      if (value == 0)
-        value = 1;
-      if (isSafe(grid, row, col, value))
-      {
-        grid[row][col] = value;
-        check = true;
-      }
-      else
-      {
-        check = false;
-      }
-    }
-  }
+  //   while (check == false)
+  //   {
+  //     int row = rand() % 9;
+  //     int col = rand() % 9;
+  //     int value = rand() % 9;
+  //     if (value == 0)
+  //       value = 1;
+  //     if (isSafe(grid, row, col, value))
+  //     {
+  //       grid[row][col] = value;
+  //       check = true;
+  //     }
+  //     else
+  //     {
+  //       check = false;
+  //     }
+  //   }
+  // }
 }
 
-bool SolveSudoku(int **grid)
+bool solveSudoku(int **grid)
 {
   int row = 0, col = 0;
-  if (!FindUnassignedLocation(grid, row, col))
+  if (!findUnassignedLocation(grid, row, col))
     return true;
   for (int num = 1; num <= 9; num++)
   {
     if (isSafe(grid, row, col, num))
     {
       grid[row][col] = num;
-      if (SolveSudoku(grid))
+      if (solveSudoku(grid))
         return true;
       grid[row][col] = UNASSIGNED;
     }
   }
   return false;
-}
-
-void ReleaseDynamicMemory(int **grid, Text **valuesInGrid)
-{
-  for (int i = 0; i < N; i++)
-  {
-    delete[] * (grid + i);
-    delete[] * (valuesInGrid + 1);
-  }
 }
 
 void displayMenuScreen(RenderWindow &window, Data &data)
@@ -423,6 +422,33 @@ void displayGuideScreen(RenderWindow &window, Data &data)
   }
 }
 
+void setUpInputGrid(inputPoint &p1, int &inputX, int &inputY, int valuePX,
+                    int valuePY, int valueX, int valueY, RectangleShape rectangles[9][9],
+                    int activeInputX, int activeInputY, bool clearAll)
+{
+  p1.active = false;
+  if (p1.active == false)
+  {
+    rectangles[activeInputX][activeInputY].setFillColor(Color::Transparent);
+    p1.active = true;
+    p1.x = valuePX;
+    p1.y = valuePY;
+    inputX = valueX;
+    inputY = valueY;
+    if (clearAll == true)
+    {
+    rectangles[valueX][valueY].setFillColor(Color::Green);
+    rectangles[valueX][valueY].setOutlineColor(Color::Black);
+    rectangles[valueX][valueY].setOutlineThickness(1);
+    }
+
+  }
+  else
+  {
+    p1.active = false;
+  }
+}
+
 void displayGameScreen(RenderWindow &window, Data &data)
 {
   int **grid;
@@ -432,7 +458,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
     *(grid + i) = new int[N];
   }
 
-  ReadGridFromInputFile(grid, N);
+  readGridFromInputFile(grid, N);
 
   RectangleShape rectangleFull;
   rectangleFull.setSize(Vector2f(360, 360));
@@ -499,7 +525,13 @@ void displayGameScreen(RenderWindow &window, Data &data)
   error.setColor(Color::Red);
   error.setString("");
 
+  inputPoint p1;
+  int inputX = 0, inputY = 0;
+  p1.active = false;
+
   bool checkFocus[3] = {false, false, false};
+  int activeInputX = 0, activeInputY = 0;
+  bool clearAll = false;
   while (window.isOpen())
   {
     Event e;
@@ -510,7 +542,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
       case Event::Closed:
         window.close();
       case Event::MouseButtonPressed:
-
+      {
         if (e.mouseButton.button == Mouse::Left)
         {
           int x = Mouse::getPosition(window).x;
@@ -520,7 +552,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             data.sounds.button.stop();
             data.sounds.button.play();
             error.setString("");
-            GenerateNewGrid(grid);
+            generateNewGrid(grid);
             for (int i = 0; i < N; i++)
             {
               for (int j = 0; j < N; j++)
@@ -548,7 +580,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
           {
             data.sounds.button.stop();
             data.sounds.button.play();
-            if (SolveSudoku(grid))
+            if (solveSudoku(grid))
             {
               for (int i = 0; i < N; i++)
               {
@@ -575,12 +607,34 @@ void displayGameScreen(RenderWindow &window, Data &data)
             data.sounds.button.stop();
             data.sounds.button.play();
             displayMenuScreen(window, data);
-            ReleaseDynamicMemory(grid, valuesInGrid);
           }
+
+          for (int i = 0; i < N; i++)
+          {
+            for (int j = 0; j < N; j++)
+            {
+              if (x >= 300 + i * 40 && x <= 340 + i * 40 && y >= 180 + j * 40 && y <= 220 + j * 40)
+              {
+                clearAll = true;
+                setUpInputGrid(p1, inputX, inputY, 312 + i * 40, 188 + j * 40, j, i, rectangles, activeInputX, activeInputY, clearAll);
+                activeInputX = j;
+                activeInputY = i;
+              }
+            }
+          }
+          if (x < 300 || x > 680 || y < 180 || y > 540)
+              {
+                clearAll = false;
+                setUpInputGrid(p1, inputX, inputY, 0, 0, 0, 0, rectangles, activeInputX, activeInputY, clearAll);
+                activeInputX = 0;
+                activeInputY = 0;
+              }
         }
         break;
+      }
 
       case Event::MouseMoved:
+      {
         int x = e.mouseMove.x;
         int y = e.mouseMove.y;
         if (x >= 730 && x <= 800 && y >= 210 && y <= 280)
@@ -609,6 +663,109 @@ void displayGameScreen(RenderWindow &window, Data &data)
         }
 
         break;
+      }
+      case Event::KeyPressed:
+      {
+        if (p1.active == true && clearAll == true)
+        {
+          if (e.key.code == Keyboard::Numpad1)
+          {
+            grid[inputX][inputY] = 1;
+            valuesInGrid[inputX][inputY].setString("1");
+            valuesInGrid[inputX][inputY].setFont(data.font);
+            valuesInGrid[inputX][inputY].setCharacterSize(20);
+            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setColor(Color::Black);
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+          if (e.key.code == Keyboard::Numpad2)
+          {
+            grid[inputX][inputY] = 2;
+            valuesInGrid[inputX][inputY].setString("2");
+            valuesInGrid[inputX][inputY].setFont(data.font);
+            valuesInGrid[inputX][inputY].setCharacterSize(20);
+            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setColor(Color::Black);
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+          if (e.key.code == Keyboard::Numpad3)
+          {
+            grid[inputX][inputY] = 3;
+            valuesInGrid[inputX][inputY].setString("3");
+            valuesInGrid[inputX][inputY].setFont(data.font);
+            valuesInGrid[inputX][inputY].setCharacterSize(20);
+            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setColor(Color::Black);
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+          if (e.key.code == Keyboard::Numpad4)
+          {
+            grid[inputX][inputY] = 4;
+            valuesInGrid[inputX][inputY].setString("4");
+            valuesInGrid[inputX][inputY].setFont(data.font);
+            valuesInGrid[inputX][inputY].setCharacterSize(20);
+            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setColor(Color::Black);
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+          if (e.key.code == Keyboard::Numpad5)
+          {
+            grid[inputX][inputY] = 5;
+            valuesInGrid[inputX][inputY].setString("5");
+            valuesInGrid[inputX][inputY].setFont(data.font);
+            valuesInGrid[inputX][inputY].setCharacterSize(20);
+            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setColor(Color::Black);
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+          if (e.key.code == Keyboard::Numpad6)
+          {
+            grid[inputX][inputY] = 6;
+            valuesInGrid[inputX][inputY].setString("6");
+            valuesInGrid[inputX][inputY].setFont(data.font);
+            valuesInGrid[inputX][inputY].setCharacterSize(20);
+            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setColor(Color::Black);
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+          if (e.key.code == Keyboard::Numpad7)
+          {
+            grid[inputX][inputY] = 7;
+            valuesInGrid[inputX][inputY].setString("7");
+            valuesInGrid[inputX][inputY].setFont(data.font);
+            valuesInGrid[inputX][inputY].setCharacterSize(20);
+            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setColor(Color::Black);
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+          if (e.key.code == Keyboard::Numpad8)
+          {
+            grid[inputX][inputY] = 8;
+            valuesInGrid[inputX][inputY].setString("8");
+            valuesInGrid[inputX][inputY].setFont(data.font);
+            valuesInGrid[inputX][inputY].setCharacterSize(20);
+            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setColor(Color::Black);
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+          if (e.key.code == Keyboard::Numpad9)
+          {
+            grid[inputX][inputY] = 9;
+            valuesInGrid[inputX][inputY].setString("9");
+            valuesInGrid[inputX][inputY].setFont(data.font);
+            valuesInGrid[inputX][inputY].setCharacterSize(20);
+            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setColor(Color::Black);
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+          if (e.key.code == Keyboard::Numpad0)
+          {
+            grid[inputX][inputY] = 0;
+            valuesInGrid[inputX][inputY].setString("");
+            window.draw(valuesInGrid[inputX][inputY]);
+          }
+        }
+      }
       }
     }
     window.clear();
