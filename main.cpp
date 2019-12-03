@@ -2,7 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <SFML/Audio.hpp>
-#include <time.h>
+#include <vector>
+#include <string>
 using namespace std;
 using namespace sf;
 
@@ -32,6 +33,8 @@ struct Images
   Sprite buttonItemBackActive;
   Sprite buttonMute;
   Sprite buttonUnmute;
+  Sprite buttonPrevious;
+  Sprite buttonNext;
   Sprite loading;
 };
 
@@ -109,6 +112,14 @@ void loadImages(Images &images)
   Texture *buttonUnmute = new Texture;
   buttonUnmute->loadFromFile("Image/Buttons/unmute.png");
   images.buttonUnmute.setTexture(*buttonUnmute);
+
+  Texture *buttonPrevious = new Texture;
+  buttonPrevious->loadFromFile("Image/Buttons/previous.png");
+  images.buttonPrevious.setTexture(*buttonPrevious);
+
+  Texture *buttonNext = new Texture;
+  buttonNext->loadFromFile("Image/Buttons/next.png");
+  images.buttonNext.setTexture(*buttonNext);
 }
 
 void loadSounds(Sounds &sounds)
@@ -122,14 +133,14 @@ void loadFont(Font &font)
   font.loadFromFile("Font/main.ttf");
 }
 
-void readGridFromInputFile(int **grid, int n)
+void readGridFromInputFile(int **grid)
 {
 
   ifstream ifs;
   ifs.open("InputFile/input.txt");
-  for (int i = 0; i < n; i++)
+  for (int i = 0; i < N; i++)
   {
-    for (int j = 0; j < n; j++)
+    for (int j = 0; j < N; j++)
     {
       ifs >> *(*(grid + i) + j);
     }
@@ -202,75 +213,67 @@ void generateNewGrid(int **grid)
       grid[i][j] = 0;
     }
   }
-  // for (int i = 0; i < 20; i++)
-  // {
-  //   bool check = false;
-
-  //   while (check == false)
-  //   {
-  //     int row = rand() % 9;
-  //     int col = rand() % 9;
-  //     int value = rand() % 9;
-  //     if (value == 0)
-  //       value = 1;
-  //     if (isSafe(grid, row, col, value))
-  //     {
-  //       grid[row][col] = value;
-  //       check = true;
-  //     }
-  //     else
-  //     {
-  //       check = false;
-  //     }
-  //   }
-  // }
 }
 
-bool solveSudoku(int **grid)
+bool solveSudoku(int** grid, vector <int**> vector)
 {
-  int row = 0, col = 0;
-  if (!findUnassignedLocation(grid, row, col))
-    return true;
-  for (int num = 1; num <= 9; num++)
-  {
-    if (isSafe(grid, row, col, num))
-    {
-      grid[row][col] = num;
-      if (solveSudoku(grid))
-        return true;
-      grid[row][col] = UNASSIGNED;
-    }
-  }
-  return false;
+	int row = 0, col = 0;
+	if (!findUnassignedLocation(grid, row, col))
+		return true;
+	for (int num = 1; num <= 9; num++)
+	{
+		if (isSafe(grid, row, col, num))
+		{
+			bool check = true;
+			for (int i = 0; i < vector.size(); i++)
+			{
+				if (num == vector[i][row][col])
+				{
+					check = false;
+					break;
+				}
+			}
+			if (check)
+			{
+				grid[row][col] = num;
+				if (solveSudoku(grid, vector))
+					return true;
+				grid[row][col] = UNASSIGNED;
+			}
+			else
+			{
+				grid[row][col] = UNASSIGNED;
+			}
+		}
+	}
+	return false;
+}
+
+void coppyGrid(int** grid, int** backup)
+{
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++)
+			*(*(backup + i) + j) = *(*(grid + i) + j);
+	}
+}
+
+void displayTextInButton(RenderWindow &window, int x, int y, Font font, string value)
+{
+  Text text;
+  text.setCharacterSize(20);
+  text.setFont(font);
+  text.setString(value);
+  text.setPosition(x, y);
+  text.setColor(Color::White);
+  window.draw(text);
 }
 
 void displayMenuScreen(RenderWindow &window, Data &data)
 {
-
-  Text text1, text2, text3;
-
-  text1.setCharacterSize(20);
-  text1.setFont(data.font);
-  text1.setString("PLAY");
-  text1.setPosition(455, 360);
-  text1.setColor(Color::White);
-
-  text2.setCharacterSize(20);
-  text2.setFont(data.font);
-  text2.setString("OPTION");
-  text2.setPosition(443, 460);
-  text2.setColor(Color::White);
-
-  text3.setCharacterSize(20);
-  text3.setFont(data.font);
-  text3.setString("EXIT");
-  text3.setPosition(460, 560);
-  text3.setColor(Color::White);
-
-  bool checkFocus[3] = {false, false, false};
+  bool checkHover[3] = {false, false, false};
   while (window.isOpen())
   {
-
     Event e;
     while (window.pollEvent(e))
     {
@@ -288,7 +291,6 @@ void displayMenuScreen(RenderWindow &window, Data &data)
           {
             data.sounds.button.stop();
             data.sounds.button.play();
-            //displayGameScreen(window, data);
             displayGuideScreen(window, data);
           }
           if (x >= 380 && x <= 580 && y >= 448 && y <= 498)
@@ -310,27 +312,27 @@ void displayMenuScreen(RenderWindow &window, Data &data)
         int y = e.mouseMove.y;
         if (x >= 380 && x <= 580 && y >= 348 && y <= 398)
         {
-          checkFocus[0] = true;
+          checkHover[0] = true;
         }
         else
         {
-          checkFocus[0] = false;
+          checkHover[0] = false;
         }
         if (x >= 380 && x <= 580 && y >= 448 && y <= 498)
         {
-          checkFocus[1] = true;
+          checkHover[1] = true;
         }
         else
         {
-          checkFocus[1] = false;
+          checkHover[1] = false;
         }
         if (x >= 380 && x <= 580 && y >= 558 && y <= 598)
         {
-          checkFocus[2] = true;
+          checkHover[2] = true;
         }
         else
         {
-          checkFocus[2] = false;
+          checkHover[2] = false;
         }
         break;
       }
@@ -339,7 +341,7 @@ void displayMenuScreen(RenderWindow &window, Data &data)
     window.draw(data.images.backgroundWithLogo);
     for (int i = 0; i < 3; i++)
     {
-      if (checkFocus[i] == false)
+      if (checkHover[i] == false)
       {
         data.images.button.setPosition(380, 300 + i * 100);
         window.draw(data.images.button);
@@ -350,9 +352,9 @@ void displayMenuScreen(RenderWindow &window, Data &data)
         window.draw(data.images.buttonActive);
       }
     }
-    window.draw(text1);
-    window.draw(text2);
-    window.draw(text3);
+    displayTextInButton(window, 455, 360, data.font, "PLAY");
+    displayTextInButton(window, 443, 460, data.font, "OPTION");
+    displayTextInButton(window, 460, 560, data.font, "EXIT");
     window.display();
   }
 }
@@ -365,7 +367,7 @@ void displayGuideScreen(RenderWindow &window, Data &data)
   text.setString("OK");
   text.setPosition(465, 580);
   text.setColor(Color::White);
-  bool checkFocus = false;
+  bool checkHover = false;
   while (window.isOpen())
   {
     Event e;
@@ -394,11 +396,11 @@ void displayGuideScreen(RenderWindow &window, Data &data)
         int y = e.mouseMove.y;
         if (x >= 380 && x <= 580 && y >= 568 && y <= 618)
         {
-          checkFocus = true;
+          checkHover = true;
         }
         else
         {
-          checkFocus = false;
+          checkHover = false;
         }
 
         break;
@@ -406,7 +408,7 @@ void displayGuideScreen(RenderWindow &window, Data &data)
     }
     window.clear();
     window.draw(data.images.guideScreen);
-    if (checkFocus == false)
+    if (checkHover == false)
     {
       data.images.button.setPosition(380, 520);
       window.draw(data.images.button);
@@ -422,17 +424,17 @@ void displayGuideScreen(RenderWindow &window, Data &data)
   }
 }
 
-void setUpInputGrid(inputPoint &p1, int &inputX, int &inputY, int valuePX,
+void setUpInputGrid(inputPoint &p, int &inputX, int &inputY, int valuePX,
                     int valuePY, int valueX, int valueY, RectangleShape rectangles[9][9],
                     int activeInputX, int activeInputY, bool clearAll)
 {
-  p1.active = false;
-  if (p1.active == false)
+  p.active = false;
+  if (p.active == false)
   {
     rectangles[activeInputX][activeInputY].setFillColor(Color::Transparent);
-    p1.active = true;
-    p1.x = valuePX;
-    p1.y = valuePY;
+    p.active = true;
+    p.x = valuePX;
+    p.y = valuePY;
     inputX = valueX;
     inputY = valueY;
     if (clearAll == true)
@@ -445,20 +447,35 @@ void setUpInputGrid(inputPoint &p1, int &inputX, int &inputY, int valuePX,
   }
   else
   {
-    p1.active = false;
+    p.active = false;
   }
+}
+
+void Display(int** grid)
+{
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++)
+			cout << *(*(grid + i) + j) << " ";
+		cout << endl;
+	}
 }
 
 void displayGameScreen(RenderWindow &window, Data &data)
 {
   int **grid;
+
+  vector <int**> listGrid;
+
+  int countSolution;
+  int pageIndex;
   grid = new int *[N];
   for (int i = 0; i < N; i++)
   {
     *(grid + i) = new int[N];
   }
 
-  readGridFromInputFile(grid, N);
+  readGridFromInputFile(grid);
 
   RectangleShape rectangleFull;
   rectangleFull.setSize(Vector2f(360, 360));
@@ -518,18 +535,18 @@ void displayGameScreen(RenderWindow &window, Data &data)
   data.images.buttonItemSolveActive.setPosition(670, 290);
   data.images.buttonItemBackActive.setPosition(670, 410);
 
-  Text error;
-  error.setFont(data.font);
-  error.setCharacterSize(20);
-  error.setPosition(417, 560);
-  error.setColor(Color::Red);
-  error.setString("");
+  Text annoucement;
+  annoucement.setFont(data.font);
+  annoucement.setCharacterSize(20);
+  annoucement.setPosition(417, 130);
+  annoucement.setColor(Color::Red);
+  annoucement.setString("");
 
-  inputPoint p1;
+  inputPoint p;
   int inputX = 0, inputY = 0;
-  p1.active = false;
-
-  bool checkFocus[3] = {false, false, false};
+  p.active = false;
+  bool checkMultipleSolutions = false;
+  bool checkHover[3] = {false, false, false};
   int activeInputX = 0, activeInputY = 0;
   bool clearAll = false;
   while (window.isOpen())
@@ -551,28 +568,16 @@ void displayGameScreen(RenderWindow &window, Data &data)
           {
             data.sounds.button.stop();
             data.sounds.button.play();
-            error.setString("");
+            annoucement.setString("");
             generateNewGrid(grid);
+            checkMultipleSolutions = false;
             for (int i = 0; i < N; i++)
             {
               for (int j = 0; j < N; j++)
               {
-                if (grid[i][j] > 0)
-                {
-                  string valueString = to_string(grid[i][j]);
-                  valuesInGrid[i][j].setFont(data.font);
-                  valuesInGrid[i][j].setString(valueString);
-                  valuesInGrid[i][j].setCharacterSize(20);
-                  valuesInGrid[i][j].setPosition(312 + j * 40, 188 + 40 * i);
-                  valuesInGrid[i][j].setColor(Color::Black);
-                  window.draw(valuesInGrid[i][j]);
-                }
-                else
-                {
                   valuesInGrid[i][j].setString("");
                   valuesInGrid[i][j].setPosition(312 + j * 40, 188 + 40 * i);
                   window.draw(valuesInGrid[i][j]);
-                }
               }
             }
           }
@@ -580,13 +585,66 @@ void displayGameScreen(RenderWindow &window, Data &data)
           {
             data.sounds.button.stop();
             data.sounds.button.play();
-            if (solveSudoku(grid))
+            countSolution = 0;
+            listGrid.clear();
+
+            listGrid.push_back(grid);
+
+            int** mainBackupGrid = new int* [N];
+            for (int i = 0; i < N; i++)
             {
-              for (int i = 0; i < N; i++)
+                *(mainBackupGrid + i) = new int[N];
+            }
+            coppyGrid(grid, mainBackupGrid);
+            while (true)
+            {
+                if (solveSudoku(grid, listGrid))
+                {
+                    countSolution++;
+                    int** backupGrid = new int* [N];
+                    for (int i = 0; i < N; i++)
+                    {
+                        *(backupGrid + i) = new int[N];
+                    }
+                    coppyGrid(grid, backupGrid);
+                    listGrid.push_back(backupGrid);
+                    coppyGrid(mainBackupGrid, grid);;
+                }
+                else break;
+            }
+            int length = listGrid.size();
+            if (length == 1)
+            {
+                annoucement.setString("CANT SOLVE");
+                checkMultipleSolutions = false;
+            }
+            else
+            {
+                Color color(71, 203, 37);
+                annoucement.setColor(color);
+                string result;
+                if (length == 2)
+                {
+                    result = "FOUND 1 SOLUTION";
+                    checkMultipleSolutions = false;
+                }
+                else
+                {
+                    result = "FOUND " + to_string(length - 1) + " SOLUTIONS";
+                    checkMultipleSolutions = true;
+                    pageIndex = 1;
+                }
+                annoucement.setString(result);
+                annoucement.setPosition(380, 130);
+
+            }
+
+
+            for (int i = 0; i < N; i++)
               {
                 for (int j = 0; j < N; j++)
                 {
-                  string valueString = to_string(grid[i][j]);
+                  string valueString = to_string(listGrid[1][i][j]);
                   valuesInGrid[i][j].setFont(data.font);
                   valuesInGrid[i][j].setString(valueString);
                   valuesInGrid[i][j].setCharacterSize(20);
@@ -595,18 +653,51 @@ void displayGameScreen(RenderWindow &window, Data &data)
                   window.draw(valuesInGrid[i][j]);
                 }
               }
-              error.setString("");
-            }
-            else
-            {
-              error.setString("CANT SOLVE");
-            }
           }
           if (x >= 730 && x <= 800 && y >= 450 && y <= 520)
           {
             data.sounds.button.stop();
             data.sounds.button.play();
             displayMenuScreen(window, data);
+          }
+
+          if (x >= 390 && x <= 440 && y >= 570 && y <= 620 && checkMultipleSolutions)
+          {
+            if (pageIndex == 1) pageIndex = 1;
+            else pageIndex--;
+            for (int i = 0; i < N; i++)
+              {
+                for (int j = 0; j < N; j++)
+                {
+                  string valueString = to_string(listGrid[pageIndex][i][j]);
+                  valuesInGrid[i][j].setFont(data.font);
+                  valuesInGrid[i][j].setString(valueString);
+                  valuesInGrid[i][j].setCharacterSize(20);
+                  valuesInGrid[i][j].setPosition(312 + j * 40, 188 + 40 * i);
+                  valuesInGrid[i][j].setColor(Color::Black);
+                  window.draw(valuesInGrid[i][j]);
+                }
+              }
+
+          }
+
+          if (x >= 520 && x <= 570 && y >= 570 && y <= 620 && checkMultipleSolutions)
+          {
+            if (pageIndex == listGrid.size() - 1) pageIndex = listGrid.size() - 1;
+            else pageIndex++;
+            for (int i = 0; i < N; i++)
+              {
+                for (int j = 0; j < N; j++)
+                {
+                  string valueString = to_string(listGrid[pageIndex][i][j]);
+                  valuesInGrid[i][j].setFont(data.font);
+                  valuesInGrid[i][j].setString(valueString);
+                  valuesInGrid[i][j].setCharacterSize(20);
+                  valuesInGrid[i][j].setPosition(312 + j * 40, 188 + 40 * i);
+                  valuesInGrid[i][j].setColor(Color::Black);
+                  window.draw(valuesInGrid[i][j]);
+                }
+              }
           }
 
           for (int i = 0; i < N; i++)
@@ -616,7 +707,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
               if (x >= 300 + i * 40 && x <= 340 + i * 40 && y >= 180 + j * 40 && y <= 220 + j * 40)
               {
                 clearAll = true;
-                setUpInputGrid(p1, inputX, inputY, 312 + i * 40, 188 + j * 40, j, i, rectangles, activeInputX, activeInputY, clearAll);
+                setUpInputGrid(p, inputX, inputY, 312 + i * 40, 188 + j * 40, j, i, rectangles, activeInputX, activeInputY, clearAll);
                 activeInputX = j;
                 activeInputY = i;
               }
@@ -625,10 +716,12 @@ void displayGameScreen(RenderWindow &window, Data &data)
           if (x < 300 || x > 680 || y < 180 || y > 540)
               {
                 clearAll = false;
-                setUpInputGrid(p1, inputX, inputY, 0, 0, 0, 0, rectangles, activeInputX, activeInputY, clearAll);
+                setUpInputGrid(p, inputX, inputY, 0, 0, 0, 0, rectangles, activeInputX, activeInputY, clearAll);
                 activeInputX = 0;
                 activeInputY = 0;
               }
+
+
         }
         break;
       }
@@ -639,34 +732,34 @@ void displayGameScreen(RenderWindow &window, Data &data)
         int y = e.mouseMove.y;
         if (x >= 730 && x <= 800 && y >= 210 && y <= 280)
         {
-          checkFocus[0] = true;
+          checkHover[0] = true;
         }
         else
         {
-          checkFocus[0] = false;
+          checkHover[0] = false;
         }
         if (x >= 730 && x <= 800 && y >= 330 && y <= 400)
         {
-          checkFocus[1] = true;
+          checkHover[1] = true;
         }
         else
         {
-          checkFocus[1] = false;
+          checkHover[1] = false;
         }
         if (x >= 730 && x <= 800 && y >= 450 && y <= 520)
         {
-          checkFocus[2] = true;
+          checkHover[2] = true;
         }
         else
         {
-          checkFocus[2] = false;
+          checkHover[2] = false;
         }
 
         break;
       }
       case Event::KeyPressed:
       {
-        if (p1.active == true && clearAll == true)
+        if (p.active == true && clearAll == true)
         {
           if (e.key.code == Keyboard::Numpad1)
           {
@@ -674,7 +767,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             valuesInGrid[inputX][inputY].setString("1");
             valuesInGrid[inputX][inputY].setFont(data.font);
             valuesInGrid[inputX][inputY].setCharacterSize(20);
-            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setPosition(p.x, p.y);
             valuesInGrid[inputX][inputY].setColor(Color::Black);
             window.draw(valuesInGrid[inputX][inputY]);
           }
@@ -684,7 +777,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             valuesInGrid[inputX][inputY].setString("2");
             valuesInGrid[inputX][inputY].setFont(data.font);
             valuesInGrid[inputX][inputY].setCharacterSize(20);
-            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setPosition(p.x, p.y);
             valuesInGrid[inputX][inputY].setColor(Color::Black);
             window.draw(valuesInGrid[inputX][inputY]);
           }
@@ -694,7 +787,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             valuesInGrid[inputX][inputY].setString("3");
             valuesInGrid[inputX][inputY].setFont(data.font);
             valuesInGrid[inputX][inputY].setCharacterSize(20);
-            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setPosition(p.x, p.y);
             valuesInGrid[inputX][inputY].setColor(Color::Black);
             window.draw(valuesInGrid[inputX][inputY]);
           }
@@ -704,7 +797,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             valuesInGrid[inputX][inputY].setString("4");
             valuesInGrid[inputX][inputY].setFont(data.font);
             valuesInGrid[inputX][inputY].setCharacterSize(20);
-            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setPosition(p.x, p.y);
             valuesInGrid[inputX][inputY].setColor(Color::Black);
             window.draw(valuesInGrid[inputX][inputY]);
           }
@@ -714,7 +807,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             valuesInGrid[inputX][inputY].setString("5");
             valuesInGrid[inputX][inputY].setFont(data.font);
             valuesInGrid[inputX][inputY].setCharacterSize(20);
-            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setPosition(p.x, p.y);
             valuesInGrid[inputX][inputY].setColor(Color::Black);
             window.draw(valuesInGrid[inputX][inputY]);
           }
@@ -724,7 +817,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             valuesInGrid[inputX][inputY].setString("6");
             valuesInGrid[inputX][inputY].setFont(data.font);
             valuesInGrid[inputX][inputY].setCharacterSize(20);
-            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setPosition(p.x, p.y);
             valuesInGrid[inputX][inputY].setColor(Color::Black);
             window.draw(valuesInGrid[inputX][inputY]);
           }
@@ -734,7 +827,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             valuesInGrid[inputX][inputY].setString("7");
             valuesInGrid[inputX][inputY].setFont(data.font);
             valuesInGrid[inputX][inputY].setCharacterSize(20);
-            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setPosition(p.x, p.y);
             valuesInGrid[inputX][inputY].setColor(Color::Black);
             window.draw(valuesInGrid[inputX][inputY]);
           }
@@ -744,7 +837,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             valuesInGrid[inputX][inputY].setString("8");
             valuesInGrid[inputX][inputY].setFont(data.font);
             valuesInGrid[inputX][inputY].setCharacterSize(20);
-            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setPosition(p.x, p.y);
             valuesInGrid[inputX][inputY].setColor(Color::Black);
             window.draw(valuesInGrid[inputX][inputY]);
           }
@@ -754,7 +847,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
             valuesInGrid[inputX][inputY].setString("9");
             valuesInGrid[inputX][inputY].setFont(data.font);
             valuesInGrid[inputX][inputY].setCharacterSize(20);
-            valuesInGrid[inputX][inputY].setPosition(p1.x, p1.y);
+            valuesInGrid[inputX][inputY].setPosition(p.x, p.y);
             valuesInGrid[inputX][inputY].setColor(Color::Black);
             window.draw(valuesInGrid[inputX][inputY]);
           }
@@ -770,7 +863,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
     }
     window.clear();
     window.draw(data.images.backgroundInGame);
-    if (checkFocus[0])
+    if (checkHover[0])
     {
       window.draw(data.images.buttonItemGenerateActive);
     }
@@ -778,7 +871,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
     {
       window.draw(data.images.buttonItemGenerate);
     }
-    if (checkFocus[1])
+    if (checkHover[1])
     {
       window.draw(data.images.buttonItemSolveActive);
     }
@@ -786,7 +879,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
     {
       window.draw(data.images.buttonItemSolve);
     }
-    if (checkFocus[2])
+    if (checkHover[2])
     {
       window.draw(data.images.buttonItemBackActive);
     }
@@ -813,7 +906,21 @@ void displayGameScreen(RenderWindow &window, Data &data)
       }
     }
 
-    window.draw(error);
+    window.draw(annoucement);
+    if (checkMultipleSolutions)
+    {
+        data.images.buttonPrevious.setPosition(390, 570);
+        window.draw(data.images.buttonPrevious);
+        data.images.buttonNext.setPosition(520, 570);
+        window.draw(data.images.buttonNext);
+        Text page;
+        page.setFont(data.font);
+        page.setCharacterSize(30);
+        page.setPosition(472, 575);
+        page.setColor(Color::Black);
+        page.setString(to_string(pageIndex));
+        window.draw(page);
+    }
     window.display();
   }
 }
@@ -828,7 +935,7 @@ void displayOptionScreen(RenderWindow &window, Data &data)
   text.setColor(Color::White);
   int lastVolumeMusic = data.volumeMusic;
   int lastVolumeButton = data.volumeButton;
-  bool checkFocus = false;
+  bool checkHover = false;
 
   RectangleShape rectangleVolumeMusic[5];
   RectangleShape rectangleVolumeButton[5];
@@ -993,11 +1100,11 @@ void displayOptionScreen(RenderWindow &window, Data &data)
         int y = e.mouseMove.y;
         if (x >= 380 && x <= 580 && y >= 568 && y <= 618)
         {
-          checkFocus = true;
+          checkHover = true;
         }
         else
         {
-          checkFocus = false;
+          checkHover = false;
         }
 
         break;
@@ -1005,7 +1112,7 @@ void displayOptionScreen(RenderWindow &window, Data &data)
     }
     window.clear();
     window.draw(data.images.optionScreen);
-    if (checkFocus == false)
+    if (checkHover == false)
     {
       data.images.button.setPosition(380, 520);
       window.draw(data.images.button);
@@ -1049,10 +1156,7 @@ void displayOptionScreen(RenderWindow &window, Data &data)
 
 int main()
 {
-
   RenderWindow window(VideoMode(960, 768), "SUDOKU", Style::Default);
-
-  //window.setFramerateLimit(60);
   window.setVerticalSyncEnabled(true);
 
   Data data;
