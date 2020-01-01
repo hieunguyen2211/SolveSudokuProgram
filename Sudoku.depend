@@ -1,10 +1,11 @@
 # depslib dependency file v1.0
-1571212670 source:c:\users\phuon\onedrive\desktop\school\sudoku\main.cpp
+1575426927 source:c:\users\phuon\onedrive\desktop\school\sudoku\main.cpp
 	<SFML/Graphics.hpp>
 	<iostream>
 	<fstream>
 	<SFML/Audio.hpp>
-	<time.h>
+	<vector>
+	<string>
 
 1525812018 c:\users\phuon\onedrive\desktop\sfml-2.5.1\include\sfml\graphics.hpp
 	<SFML/Window.hpp>

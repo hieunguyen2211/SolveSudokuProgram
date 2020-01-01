@@ -585,6 +585,21 @@ void displayGameScreen(RenderWindow &window, Data &data)
           {
             data.sounds.button.stop();
             data.sounds.button.play();
+
+            bool checkValidate = true;
+            if (grid[0][0] == grid[0][1] && grid[0][0] != 0) checkValidate = false;
+            if (!checkValidate)
+            {
+                annoucement.setString("CANT SOLVE");
+
+                annoucement.setPosition(417, 130);
+                annoucement.setColor(Color::Red);
+                checkMultipleSolutions = false;
+
+            }
+            else
+            {
+
             countSolution = 0;
             listGrid.clear();
 
@@ -653,6 +668,7 @@ void displayGameScreen(RenderWindow &window, Data &data)
                   window.draw(valuesInGrid[i][j]);
                 }
               }
+          }
           }
           if (x >= 730 && x <= 800 && y >= 450 && y <= 520)
           {
